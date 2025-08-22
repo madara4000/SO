@@ -1,59 +1,51 @@
-# Simulação de Controle de Tráfego Aéreo (Versões)
+# Simulação de Controle de Tráfego Aéreo – Versão Final
 
-Projeto com duas abordagens:
+Repositório simplificado contendo apenas a implementação final: `So-final.c`.
 
-1. `So.c` - Versão completa com:
-   - Prioridade dinâmica e aging
-   - Monitor de possível deadlock
-   - Rollback de recursos
-   - Starvation (alerta 60s, falha 90s)
-   - Modo de teste de deadlock (`arg 5 = 1`)
+## Visão Geral
+Esta simulação em C (POSIX threads) modela o fluxo de aviões por três fases sequenciais:
+1. Pouso (pista + torre)
+2. Desembarque (portão + torre, liberando a torre antes do portão)
+3. Decolagem (portão + pista + torre)
 
-2. `So_simplificado.c` - Versão reduzida (apenas headers básicos) com:
-   - Prioridade simples (internacional bloqueia domésticos)
-   - Ordem fixa de aquisição para evitar deadlock
-   - Starvation básica (60s alerta / 90s falha)
-
-3. `So_simple.c` - Intermediária (semáforos e lógica reduzida).
+### Principais características
+- Prioridade para voos internacionais sobre domésticos
+- Elevação imediata de prioridade para aviões em alerta crítico (starvation iminente)
+- Detecção de starvation (alerta aos 60s, queda/falha aos 90s)
+- Monitor periódico para detecção de deadlocks (inatividade prolongada em uma fase)
+- Reserva atômica de recursos para reduzir risco de espera circular
+- Relatório final com estatísticas de sucesso, falhas, alertas, starvation e deadlocks
 
 ## Compilação
-
 ```
-# Versão completa
-gcc -pthread So.c -o simulacao
-
-# Versão simplificada
-gcc -pthread So_simplificado.c -o simples2
-
-# Versão intermediária
-gcc -pthread So_simple.c -o simples
+gcc -pthread So-final.c -o simulacao
 ```
 
 ## Execução
-
 ```
-./simulacao <pistas> <portoes> <torres> <tempo_seg> [modo_deadlock]
-./simples2  <pistas> <portoes> <torres> <tempo_seg>
-./simples   <pistas> <portoes> <torres> <tempo_seg>
+./simulacao <pistas> <portoes> <torres> <tempo_sim_seg>
 ```
-
 Exemplo:
 ```
 ./simulacao 3 5 2 60
-./simulacao 1 1 1 40 1   # força deadlock para teste
 ```
 
-## Logs
-Relatórios finais são impressos no stdout. Você pode redirecionar:
+## Saída
+Durante a execução são impressos eventos (pouso, desembarque, decolagem, alertas). Ao término é exibido o relatório consolidado.
+Para salvar:
 ```
-./simulacao 3 5 2 60 > normal.log
+./simulacao 3 5 2 60 > exec.log
 ```
 
-## Estrutura
-- `So.c` código completo com estatísticas detalhadas
-- `So_simple.c` versão média
-- `So_simplificado.c` versão mínima
+## Parâmetros Internos Relevantes
+Podem ser ajustados editando o código:
+- ALERTA_CRITICO_SECS (60s)
+- TEMPO_MAXIMO_ESPERA (90s)
+- LIMITE_DEADLOCK (30s)
+- INTERVALO_MONITOR (5s)
 
 ## Licença
 Uso educacional.
-# SO
+
+---
+Arquivo mantido: `So-final.c`

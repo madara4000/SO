@@ -1,7 +1,5 @@
 # Simulação de Controle de Tráfego Aéreo – Versão Final
-
-Repositório simplificado contendo apenas a implementação final: `So-final.c`.
-
+Trabalho final de SO
 ## Visão Geral
 Esta simulação em C (POSIX threads) modela o fluxo de aviões por três fases sequenciais:
 1. Pouso (pista + torre)
@@ -13,7 +11,6 @@ Esta simulação em C (POSIX threads) modela o fluxo de aviões por três fases 
 - Elevação imediata de prioridade para aviões em alerta crítico (starvation iminente)
 - Detecção de starvation (alerta aos 60s, queda/falha aos 90s)
 - Monitor periódico para detecção de deadlocks (inatividade prolongada em uma fase)
-- Reserva atômica de recursos para reduzir risco de espera circular
 - Relatório final com estatísticas de sucesso, falhas, alertas, starvation e deadlocks
 
 ## Compilação
@@ -44,8 +41,3 @@ Podem ser ajustados editando o código:
 - LIMITE_DEADLOCK (30s)
 - INTERVALO_MONITOR (5s)
 
-## Licença
-Uso educacional.
-
----
-Arquivo mantido: `So-final.c`

@@ -7,15 +7,7 @@
 #include <errno.h>
 #include <string.h>
 
-/*
- Refatoração completa do simulador de controle de tráfego aéreo.
- Principais mudanças:
- - Reserva atômica de recursos com prioridade para evitar circular wait.
- - Flags por avião para recursos alocados (progresso).
- - Prioridade imediata para ALERTA_CRITICO; entre críticos, quem já possui recursos tende a avançar.
- - Liberação parcial do portão/tower no desembarque conforme especificado.
- - Contabilização de acidentes e deadlocks.
-*/
+
 
 #define TEMPO_SIMULACAO_PADRAO 300
 #define MAX_AVIOES 1000
@@ -25,7 +17,7 @@
 #define TEMPO_MAXIMO_ESPERA 90
 #define TIMEOUT_OPERACAO 10
 
-/* Códigos de retorno para sem_trywait_timeout / reservar_recursos */
+/* reservar_recursos */
 #define SEM_OK 0
 #define SEM_TIMEOUT -1
 #define SEM_SIM_ENCERRADA -2

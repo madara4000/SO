@@ -1,0 +1,13 @@
+# Binários
+simulacao
+simples
+simples2
+
+# Logs
+*.log
+
+# Objetos / intermediários
+*.o
+
+# Outros
+*~

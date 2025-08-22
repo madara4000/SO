@@ -56,3 +56,4 @@ Relatórios finais são impressos no stdout. Você pode redirecionar:
 
 ## Licença
 Uso educacional.
+# SO

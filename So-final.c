@@ -74,14 +74,13 @@ typedef struct {
     int has_torre;
 } Aviao;
 
-/* --- Reserva atômica --- */
 pthread_mutex_t reserva_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t reserva_cond = PTHREAD_COND_INITIALIZER;
 int pistas_disp = 0;
 int portoes_disp = 0;
 int torres_disp = 0;
 
-/* --- Helpers --- */
+
 
 void inicializarRecursos() {
     sem_init(&pistas, 0, N_PISTAS);
@@ -107,7 +106,7 @@ void destruirRecursos() {
     pthread_cond_destroy(&reserva_cond);
 }
 
-/* marca alerta/queda por starvation / deadlock - protegido com avioes_mutex ao modificar estado */
+/* marca alerta/queda por starvation / deadlock */
 void verificar_starvation(Aviao* aviao) {
     if (!aviao) return;
 
@@ -134,7 +133,7 @@ void verificar_starvation(Aviao* aviao) {
     } else if (tempo_espera >= TEMPO_MAXIMO_ESPERA) {
         /* Diferenciar tratamento por tipo:
            - Domésticos -> starvation/queda (acidente)
-           - Internacionais -> tratar como deadlock/falha (não contado como "acidente")
+           - Internacionais -> tratar como deadlock/falha 
         */
         if (aviao->tipo == DOMESTICO) {
             printf("FALHA (STARVATION): Avião %d (Doméstico) caiu após %ld segundos de espera!\n",
@@ -161,7 +160,7 @@ int checa_falha(Aviao* aviao) {
     return (aviao->status_final == FALHA || aviao->status_final == STARVATION);
 }
 
-/* sem_trywait com loop e retornos explícitos (mantido para compatibilidade) */
+/* sem_trywait com loop e retornos explícitos  */
 int sem_trywait_timeout(sem_t* sem, int segundos, Aviao* aviao) {
     time_t start = time(NULL);
     while (time(NULL) - start < segundos) {
@@ -181,8 +180,7 @@ int sem_trywait_timeout(sem_t* sem, int segundos, Aviao* aviao) {
     return SEM_TIMEOUT;
 }
 
-/* Reserva atômica com prioridade e bloqueio a domésticos quando internacionais aguardam.
-   need_* são necessidades REMANESCENTES (após considerar recursos já obtidos).
+/* Reserva de recursos com timeout.
    Retorna SEM_OK, SEM_TIMEOUT, SEM_SIM_ENCERRADA, SEM_AVIAO_FALHOU.
 */
 int reservar_recursos(Aviao* a, int need_pista, int need_portao, int need_torre, int timeout_seg) {
@@ -294,7 +292,7 @@ void liberar_prioridade(TipoVoo tipo) {
     pthread_mutex_unlock(&fila_mutex);
 }
 
-/* --- Operações (usando reserva atômica) --- */
+/* --- Operações --- */
 
 /* Pouso: precisa de 1 pista + 1 torre; libera ambos após pouso. */
 int pouso(Aviao* aviao) {
@@ -322,7 +320,7 @@ int pouso(Aviao* aviao) {
         return r == SEM_OK ? 0 : (r == SEM_SIM_ENCERRADA || r == SEM_AVIAO_FALHOU ? r : -1);
     }
 
-    /* adquira semáforos na ordem: TORRE -> PISTA (consistente) */
+    /* adquira semáforos na ordem: TORRE -> PISTA  */
     if (!aviao->has_torre) {
         if (sem_wait(&torres) != 0) { liberar_reserva(need_pista, need_portao, need_torre); liberar_prioridade(aviao->tipo); return -1; }
         pthread_mutex_lock(&avioes_mutex); aviao->has_torre = 1; pthread_mutex_unlock(&avioes_mutex);
@@ -346,7 +344,7 @@ int pouso(Aviao* aviao) {
     if (aviao->has_pista) { sem_post(&pistas); pthread_mutex_lock(&avioes_mutex); aviao->has_pista = 0; pthread_mutex_unlock(&avioes_mutex); }
     if (aviao->has_torre) { sem_post(&torres); pthread_mutex_lock(&avioes_mutex); aviao->has_torre = 0; pthread_mutex_unlock(&avioes_mutex); }
 
-    /* devolver a reserva feita (all remanescente) */
+    /* devolver a reserva feita  */
     liberar_reserva(need_pista, need_portao, need_torre);
 
     pthread_mutex_lock(&avioes_mutex);
@@ -404,7 +402,7 @@ int desembarque(Aviao* aviao) {
     printf("Avião %d desembarcou (%s)\n", aviao->id, aviao->tipo == INTERNACIONAL ? "Internacional" : "Doméstico");
     sleep(1);
 
-    /* liberar torre imediatamente (tanto semáforo quanto reserva correspondente) */
+    /* liberar torre imediatamente  */
     if (aviao->has_torre) { sem_post(&torres); pthread_mutex_lock(&avioes_mutex); aviao->has_torre = 0; pthread_mutex_unlock(&avioes_mutex); }
     liberar_reserva(0, 0, need_torre); /* devolve a parte de torre da reserva agora */
 
@@ -449,7 +447,7 @@ int decolagem(Aviao* aviao) {
         return r == SEM_OK ? 0 : (r == SEM_SIM_ENCERRADA || r == SEM_AVIAO_FALHOU ? r : -1);
     }
 
-    /* adquirir recursos na ordem TORRE -> PORTÃO -> PISTA (ordem fixa) */
+    /* adquirir recursos na ordem TORRE -> PORTÃO -> PISTA  */
     if (!aviao->has_torre) {
         if (sem_wait(&torres) != 0) { liberar_reserva(need_pista, need_portao, need_torre); liberar_prioridade(aviao->tipo); return -1; }
         pthread_mutex_lock(&avioes_mutex); aviao->has_torre = 1; pthread_mutex_unlock(&avioes_mutex);
